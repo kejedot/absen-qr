@@ -38,10 +38,10 @@
     </div>
     
     <button type="button" id="snapBtn" onclick="takeSnapshot()">?? Ambil Foto</button>
-    <button type="button" id="retakeBtn" class="btn-secondary" onclick="retakePhoto()" style="display:none;">?? Foto Ulang</button>
+    <button type="button" id="retakeBtn" class="btn-secondary" onclick="retakePhoto()" style="display:none;">Foto Ulang</button>
     
-    <button type="button" id="submitBtn" onclick="kirimData()" style="background:#28a745; margin-top:25px;">Kirim Presensi ?</button>
-    <div id="loading">Memproses data dan mengunggah foto... ?</div>
+    <button type="button" id="submitBtn" onclick="kirimData()" style="background:#28a745; margin-top:25px;">Kirim Presensi</button>
+    <div id="loading">Memproses data dan mengunggah foto... </div>
   </div>
 
   <script>
@@ -90,11 +90,8 @@
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('loading').style.display = 'block';
   
-  // GANTI DENGAN URL WEB APP BARU ANDA
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4fcjZ8fqY2miYoV_nDgtYf86g51aEz-igrs1M8BcXOtk8wP-M0JLEhX6BKH5TRMV6jw/execI";
-  
-  // Kita gunakan proxy gratis agar terhindar dari error CORS browser saat mengirim foto besar
-  const PROXY_URL = "https://herokuapp.com";
+  // PASTIKAN INI ADALAH URL WEB APP BARU HASIL DEPLOY ULANG DI ATAS
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4fcjZ8fqY2miYoV_nDgtYf86g51aEz-igrs1M8BcXOtk8wP-M0JLEhX6BKH5TRMV6jw/exec";
   
   const payload = {
     nama: nama,
@@ -102,28 +99,28 @@
     foto: imageBase64
   };
 
-  // Mengirim data menggunakan POST murni via fetch
+  // Mengirim data menggunakan metode POST text/plain untuk bypass CORS secara sempurna
   fetch(WEB_APP_URL, {
     method: 'POST',
-    mode: 'no-cors', // Memaksa browser mengirim data tanpa memedulikan proteksi CORS
+    mode: 'no-cors', 
     headers: {
-      'Content-Type': 'text/plain' // Menggunakan text/plain agar disetujui mode no-cors
+      'Content-Type': 'text/plain' 
     },
     body: JSON.stringify(payload)
   })
   .then(() => {
-    // Karena menggunakan no-cors, kita tidak bisa membaca response dari Google,
-    // namun data dipastikan sudah masuk ke Google Sheets jika berhasil terkirim.
+    // Beri jeda 2 detik untuk memastikan server Google selesai memproses baris data Anda
     setTimeout(() => {
       document.getElementById('formContainer').innerHTML = "<h2 style='color:#28a745;'>Terima Kasih!</h2><p style='text-align:center;'>Presensi Anda berhasil dicatat. Silakan lihat nama Anda di layar proyektor.</p>";
-    }, 1500);
+    }, 2000);
   })
   .catch(err => {
-    alert("Terjadi kesalahan pengiriman. Coba matikan VPN Anda atau gunakan browser lain.");
+    alert("Terjadi kesalahan pengiriman. Silakan coba lagi.");
     document.getElementById('submitBtn').disabled = false;
     document.getElementById('loading').style.display = 'none';
   });
 }
+
 
 
   </script>
