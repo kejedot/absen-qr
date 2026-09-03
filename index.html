@@ -81,30 +81,45 @@
     }
 
     function kirimData() {
-      const nama = document.getElementById('nama').value.trim();
-      const asal = document.getElementById('asal').value.trim();
-      
-      if(!nama || !asal) { alert("Nama dan Asal wajib diisi!"); return; }
-      if(!imageBase64) { alert("Silakan ambil foto selfie terlebih dahulu!"); return; }
-      
-      document.getElementById('submitBtn').disabled = true;
-      document.getElementById('loading').style.display = 'block';
-      
-      fetch(WEB_APP_URL, {
-        method: 'POST',
-        mode: 'no-cors', // Penting untuk bypass CORS policy Google Apps Script
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama: nama, asal: asal, foto: imageBase64 })
-      })
-      .then(() => {
-        document.getElementById('formContainer').innerHTML = "<h2 style='color:#28a745;'>Terima Kasih!</h2><p style='text-align:center;'>Presensi Anda berhasil dicatat. Silakan lihat nama Anda di layar proyektor.</p>";
-      })
-      .catch(err => {
-        alert("Terjadi kesalahan koneksi. Silakan coba lagi.");
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('loading').style.display = 'none';
-      });
+  const nama = document.getElementById('nama').value.trim();
+  const asal = document.getElementById('asal').value.trim();
+  
+  if(!nama || !asal) { alert("Nama dan Asal wajib diisi!"); return; }
+  if(!imageBase64) { alert("Silakan ambil foto selfie terlebih dahulu!"); return; }
+  
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  
+  // GANTI DENGAN URL WEB APP BARU HASIL DEPLOY ANDA
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4fcjZ8fqY2miYoV_nDgtYf86g51aEz-igrs1M8BcXOtk8wP-M0JLEhX6BKH5TRMV6jw/exec";
+  
+  // Membuat fungsi callback unik untuk menerima respon
+  const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+  window[callbackName] = function(response) {
+    if(response.success) {
+      document.getElementById('formContainer').innerHTML = "<h2 style='color:#28a745;'>Terima Kasih!</h2><p style='text-align:center;'>Presensi Anda berhasil dicatat. Silakan lihat nama Anda di layar proyektor.</p>";
+    } else {
+      alert("Gagal mencatat: " + response.message);
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('loading').style.display = 'none';
     }
+    // Bersihkan script element setelah selesai
+    document.body.removeChild(script);
+    delete window[callbackName];
+  };
+
+  // Mengirim data menggunakan metode JSONP Script tag bypass
+  const script = document.createElement('script');
+  script.src = WEB_APP_URL + 
+               "?action=submit" +
+               "&nama=" + encodeURIComponent(nama) + 
+               "&asal=" + encodeURIComponent(asal) + 
+               "&foto=" + encodeURIComponent(imageBase64) + 
+               "&callback=" + callbackName;
+               
+  document.body.appendChild(script);
+}
+
   </script>
 </body>
 </html>
