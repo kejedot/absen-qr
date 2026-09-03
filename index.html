@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Presensi QR</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box; }
+    h2 { text-align: center; color: #1a73e8; margin-top: 0; }
+    label { font-weight: bold; display: block; margin-top: 15px; color: #333; }
+    input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+    .camera-box { text-align: center; margin-top: 15px; background: #eee; border-radius: 8px; overflow: hidden; position: relative; min-height: 200px; }
+    video, canvas { width: 100%; max-width: 100%; display: block; }
+    #preview { width: 100%; display: none; border-radius: 8px; }
+    button { width: 100%; background: #1a73e8; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+    button:hover { background: #1557b0; }
+    .btn-secondary { background: #5f6368; margin-top: 5px; }
+    .btn-secondary:hover { background: #45474a; }
+    #loading { display: none; text-align: center; font-weight: bold; color: #666; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="card" id="formContainer">
+    <h2>Selamat Datang</h2>
+    <p style="text-align:center; color:#666;">Silakan isi presensi kehadiran Anda</p>
+    
+    <label>Nama Lengkap</label>
+    <input type="text" id="nama" placeholder="Masukkan nama Anda" required>
+    
+    <label>Asal / Instansi</label>
+    <input type="text" id="asal" placeholder="Masukkan asal instansi/kota" required>
+    
+    <label>Foto Selfie</label>
+    <div class="camera-box">
+      <video id="video" autoplay playsinline></video>
+      <img id="preview" alt="Preview Selfie">
+    </div>
+    
+    <button type="button" id="snapBtn" onclick="takeSnapshot()">?? Ambil Foto</button>
+    <button type="button" id="retakeBtn" class="btn-secondary" onclick="retakePhoto()" style="display:none;">?? Foto Ulang</button>
+    
+    <button type="button" id="submitBtn" onclick="kirimData()" style="background:#28a745; margin-top:25px;">Kirim Presensi ?</button>
+    <div id="loading">Memproses data dan mengunggah foto... ?</div>
+  </div>
+
+  <script>
+    // GANTI DENGAN URL WEB APP HASIL DEPLOY ULANG ANDA
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4fcjZ8fqY2miYoV_nDgtYf86g51aEz-igrs1M8BcXOtk8wP-M0JLEhX6BKH5TRMV6jw/exec";
+
+    const video = document.getElementById('video');
+    const preview = document.getElementById('preview');
+    const snapBtn = document.getElementById('snapBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    let imageBase64 = "";
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => { alert("Gagal mengakses kamera. Mohon izinkan akses kamera pada browser Anda."); });
+
+    function takeSnapshot() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+      preview.src = imageBase64;
+      video.style.display = 'none';
+      preview.style.display = 'block';
+      snapBtn.style.display = 'none';
+      retakeBtn.style.display = 'block';
+    }
+
+    function retakePhoto() {
+      imageBase64 = "";
+      video.style.display = 'block';
+      preview.style.display = 'none';
+      snapBtn.style.display = 'block';
+      retakeBtn.style.display = 'none';
+    }
+
+    function kirimData() {
+      const nama = document.getElementById('nama').value.trim();
+      const asal = document.getElementById('asal').value.trim();
+      
+      if(!nama || !asal) { alert("Nama dan Asal wajib diisi!"); return; }
+      if(!imageBase64) { alert("Silakan ambil foto selfie terlebih dahulu!"); return; }
+      
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+      
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Penting untuk bypass CORS policy Google Apps Script
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama: nama, asal: asal, foto: imageBase64 })
+      })
+      .then(() => {
+        document.getElementById('formContainer').innerHTML = "<h2 style='color:#28a745;'>Terima Kasih!</h2><p style='text-align:center;'>Presensi Anda berhasil dicatat. Silakan lihat nama Anda di layar proyektor.</p>";
+      })
+      .catch(err => {
+        alert("Terjadi kesalahan koneksi. Silakan coba lagi.");
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('loading').style.display = 'none';
+      });
+    }
+  </script>
+</body>
+</html>
