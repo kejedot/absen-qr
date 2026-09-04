@@ -1,27 +1,29 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Form Presensi Selfie</title>
+  <title>Form Presensi QR</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
     .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box; }
     h2 { text-align: center; color: #1a73e8; margin-top: 0; }
     label { font-weight: bold; display: block; margin-top: 15px; color: #333; }
     input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-    .camera-box { text-align: center; margin-top: 15px; background: #eee; border-radius: 8px; overflow: hidden; min-height: 240px; position: relative; }
-    video, canvas { width: 100%; display: block; object-fit: cover; }
+    .camera-box { text-align: center; margin-top: 15px; background: #eee; border-radius: 8px; overflow: hidden; position: relative; min-height: 200px; }
+    video, canvas { width: 100%; max-width: 100%; display: block; }
     #preview { width: 100%; display: none; border-radius: 8px; }
-    button { width: 100%; background: #1a73e8; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    button { width: 100%; background: #1a73e8; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+    button:hover { background: #1557b0; }
     .btn-secondary { background: #5f6368; margin-top: 5px; }
+    .btn-secondary:hover { background: #45474a; }
     #loading { display: none; text-align: center; font-weight: bold; color: #666; margin-top: 15px; }
   </style>
 </head>
 <body>
   <div class="card" id="formContainer">
-    <h2>Presensi Pertemuan</h2>
-    <p style="text-align:center; color:#666;">Silakan isi nama, asal, dan ambil selfie Anda</p>
+    <h2>Selamat Datang</h2>
+    <p style="text-align:center; color:#666;">Silakan isi presensi kehadiran Anda</p>
     
     <label>Nama Lengkap</label>
     <input type="text" id="nama" placeholder="Masukkan nama Anda" required>
@@ -35,16 +37,16 @@
       <img id="preview" alt="Preview Selfie">
     </div>
     
-    <button type="button" id="snapBtn" onclick="takeSnapshot()">📷 Ambil Foto</button>
-    <button type="button" id="retakeBtn" class="btn-secondary" onclick="retakePhoto()" style="display:none;">🔄 Foto Ulang</button>
+    <button type="button" id="snapBtn" onclick="takeSnapshot()">?? Ambil Foto</button>
+    <button type="button" id="retakeBtn" class="btn-secondary" onclick="retakePhoto()" style="display:none;">Foto Ulang</button>
     
-    <button type="button" id="submitBtn" onclick="kirimData()" style="background:#28a745; margin-top:25px;">Kirim Presensi ✅</button>
-    <div id="loading">Memproses data dan mengunggah selfie... ⏳</div>
+    <button type="button" id="submitBtn" onclick="kirimData()" style="background:#28a745; margin-top:25px;">Kirim Presensi</button>
+    <div id="loading">Memproses data dan mengunggah foto... </div>
   </div>
 
   <script>
-    // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxrSoRrCvBTlzpaLDOe-icw0iEZvLy9yz7Kq8YsurjuR9P6-c3w4kWqO2wjgBG2t6C2ug/exec";
+    // GANTI DENGAN URL WEB APP HASIL DEPLOY ULANG ANDA
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4fcjZ8fqY2miYoV_nDgtYf86g51aEz-igrs1M8BcXOtk8wP-M0JLEhX6BKH5TRMV6jw/exec";
 
     const video = document.getElementById('video');
     const preview = document.getElementById('preview');
@@ -54,18 +56,16 @@
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
       .then(stream => { video.srcObject = stream; })
-      .catch(err => { alert("Mohon izinkan akses kamera pada browser HP Anda."); });
+      .catch(err => { alert("Gagal mengakses kamera. Mohon izinkan akses kamera pada browser Anda."); });
 
     function takeSnapshot() {
       const canvas = document.createElement('canvas');
-      canvas.width = 480;
-      canvas.height = 480; // Memotong rasio kotak agar pas untuk foto profil di proyektor
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      imageBase64 = canvas.toDataURL('image/jpeg', 0.6); // Kompresi agar hemat kuota dan cepat terkirim
+      imageBase64 = canvas.toDataURL('image/jpeg', 0.6);
       preview.src = imageBase64;
-      
       video.style.display = 'none';
       preview.style.display = 'block';
       snapBtn.style.display = 'none';
@@ -81,39 +81,48 @@
     }
 
     function kirimData() {
-      const nama = document.getElementById('nama').value.trim();
-      const asal = document.getElementById('asal').value.trim();
-      
-      if(!nama || !asal) { alert("Nama dan Asal wajib diisi!"); return; }
-      if(!imageBase64) { alert("Silakan ambil foto selfie dahulu!"); return; }
-      
-      document.getElementById('submitBtn').disabled = true;
-      document.getElementById('loading').style.display = 'block';
-      
-// GANTI BLOK FETCH LAMA ANDA DENGAN INI
-const formBody = new URLSearchParams();
-formBody.append('nama', nama);
-formBody.append('asal', asal);
-formBody.append('foto', imageBase64);
+  const nama = document.getElementById('nama').value.trim();
+  const asal = document.getElementById('asal').value.trim();
+  
+  if(!nama || !asal) { alert("Nama dan Asal wajib diisi!"); return; }
+  if(!imageBase64) { alert("Silakan ambil foto selfie terlebih dahulu!"); return; }
+  
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  
+  // PASTIKAN INI ADALAH URL WEB APP BARU HASIL DEPLOY ULANG DI ATAS
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx4fcjZ8fqY2miYoV_nDgtYf86g51aEz-igrs1M8BcXOtk8wP-M0JLEhX6BKH5TRMV6jw/exec";
+  
+  const payload = {
+    nama: nama,
+    asal: asal,
+    foto: imageBase64
+  };
 
-fetch(WEB_APP_URL, {
-  method: 'POST',
-  mode: 'no-cors', // Tetap gunakan no-cors
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-  },
-  body: formBody
-})
-.then(() => {
-  document.getElementById('formContainer').innerHTML = "<h2 style='color:#28a745;'>Terima Kasih!</h2><p style='text-align:center;'>Presensi Anda berhasil dicatat. Silakan cek nama dan wajah Anda di layar proyektor!</p>";
-})
-.catch(err => {
-  alert("Terjadi kesalahan koneksi, coba lagi.");
-  document.getElementById('submitBtn').disabled = false;
-  document.getElementById('loading').style.display = 'none';
-});
+  // Mengirim data menggunakan metode POST text/plain untuk bypass CORS secara sempurna
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    mode: 'no-cors', 
+    headers: {
+      'Content-Type': 'text/plain' 
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    // Beri jeda 2 detik untuk memastikan server Google selesai memproses baris data Anda
+    setTimeout(() => {
+      document.getElementById('formContainer').innerHTML = "<h2 style='color:#28a745;'>Terima Kasih!</h2><p style='text-align:center;'>Presensi Anda berhasil dicatat. Silakan lihat nama Anda di layar proyektor.</p>";
+    }, 2000);
+  })
+  .catch(err => {
+    alert("Terjadi kesalahan pengiriman. Silakan coba lagi.");
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('loading').style.display = 'none';
+  });
+}
 
-    }
+
+
   </script>
 </body>
 </html>
