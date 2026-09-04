@@ -137,7 +137,8 @@
       <div class="form-group">
         <label>Foto Selfie</label>
         <div class="camera-area">
-          <video id="video" autoplay playsinline></video>
+          <!-- Ditambahkan inline attributes autoplay, playsinline, dan mutated untuk menjamin support Safari iOS -->
+          <video id="video" autoplay playsinline muted></video>
           <img id="preview" class="hidden" alt="Preview Selfie">
         </div>
         <div class="btn-flex">
@@ -200,5 +201,3 @@
 
     const video = document.getElementById('video');
     const preview = document.getElementById('preview');
-    const snapBtn = document.getElementById('snapBtn');
-    const retakeBtn = document.getElementById('retakeBtn');
